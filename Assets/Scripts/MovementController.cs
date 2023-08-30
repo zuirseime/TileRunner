@@ -4,43 +4,91 @@ using UnityEngine;
 
 public class MovementController : MonoBehaviour
 {
-    [SerializeField] private GameObject collider;
+    [SerializeField] private GameObject playerCollider;
+    [SerializeField] private AnimationCurve jumpCurve;
 
-    private float xInput;
-    private float zInput;
+    [SerializeField] private int moveDistance = 1;
+    [SerializeField] private float jumpDuration = 0.5f;
+
+    [SerializeField] private LayerMask tileLayer;
+
+    [SerializeField] private bool isGrounded = true;
+    [SerializeField] private bool isJumping = false;
+    private float jumpStartTime;
+
+    private static int score = 0;
+    public static int Score { get => score; }
+
+    private Vector2 startingTouchPos;
 
     void Start()
     {
-        
+        isJumping = false;
     }
 
     void Update()
     {
-        if (!TileGenerator.GameOver)
+        isGrounded = Physics.Raycast(transform.position, Vector3.down, 1f, tileLayer);
+
+        if (isGrounded)
             InputHandler();
 
-        if (collider.transform.localPosition.y < -5f)
+        if (playerCollider.transform.position.y < -5f)
         {
             TileGenerator.GameOver = true;
-            collider.gameObject.SetActive(false);
+            playerCollider.gameObject.SetActive(false);
         }
     }
 
     private void InputHandler()
     {
-        // ToDo: Add a uniform moving by one integer coordinate per pressing button or swiping
+        if (Input.touchCount > 0)
+        {
+            Touch touch = Input.GetTouch(0);
 
-        if (Input.GetKeyDown(KeyCode.W)) zInput = 1;
-        else if (Input.GetKeyDown(KeyCode.S)) zInput = -1;
-        else if (Input.GetKeyDown(KeyCode.A)) xInput = -1;
-        else if (Input.GetKeyDown(KeyCode.D)) xInput = 1;
-        else xInput = zInput = 0;
+            if (touch.phase == TouchPhase.Began)
+                startingTouchPos = touch.position;
+            else if (touch.phase == TouchPhase.Ended)
+            {
+                isJumping = true;
+                jumpStartTime = Time.time;
 
-        Vector3Int xMove = Vector3Int.right * (int)xInput;
-        Vector3Int zMove = Vector3Int.forward * (int)zInput;
+                if (isJumping)
+                {
+                    float elapsedTime = Time.time - jumpStartTime;
+                    float normalizedTime = Mathf.Clamp01(elapsedTime / jumpDuration);
+                    float jumpHeight = jumpCurve.Evaluate(normalizedTime);
 
-        Vector3Int move = xMove + zMove;
+                    Vector3 newPos = transform.position;
+                    newPos.y = jumpHeight;
+                    transform.position = newPos;
 
-        transform.Translate(move, Space.World);
+                    if (normalizedTime >= jumpDuration)
+                        isJumping = false;
+                }
+
+                Vector2 swipeDelta = touch.position - startingTouchPos;
+                float swipeThreshold = 50f;
+
+                if (Mathf.Abs(swipeDelta.x) > swipeThreshold ||
+                    Mathf.Abs(swipeDelta.y) > swipeThreshold)
+                {
+                    if (Mathf.Abs(swipeDelta.x) > Mathf.Abs(swipeDelta.y))
+                        Move(Vector3.right * moveDistance * Mathf.Sign(swipeDelta.x));
+                    else
+                        Move(Vector3.forward * moveDistance * Mathf.Sign(swipeDelta.y));
+                }
+            }
+        }
+    }
+
+    private void Move(Vector3 direction)
+    {
+        float moveAmount = 1f;
+
+        transform.Translate(direction * moveAmount, Space.World);
+
+        if (isGrounded)
+            score++;
     }
 }

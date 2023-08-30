@@ -8,7 +8,9 @@ public class TileGenerator : MonoBehaviour
 {
     [SerializeField] private GameObject prefab;
 
-    [SerializeField] private Dictionary<Vector3, GameObject> tiles = new Dictionary<Vector3, GameObject>();
+    [SerializeField] private Dictionary<Vector3, GameObject> tiles = new();
+
+    [SerializeField] private int spawnDistance = 2;
 
     private GameObject currentTile;
     private GameObject previousTile;
@@ -16,6 +18,12 @@ public class TileGenerator : MonoBehaviour
 
     public static bool GameOver { get; set; } = false;
     private bool firstMove = true;
+
+    private void OnValidate()
+    {
+        if (!prefab.TryGetComponent(out GameTile component))
+            prefab = null;
+    }
 
     void Start()
     {
@@ -29,23 +37,23 @@ public class TileGenerator : MonoBehaviour
             firstMove = false;
 
             Vector3 zeroPos = Vector3.zero;
-            currentTile = previousTile = AddTileToDictionary(zeroPos);
+            currentTile = AddTileToDictionary(zeroPos);
 
-            yield return new WaitForSecondsRealtime(delay);
+            yield return new WaitForSecondsRealtime(delay * 2f);
         }
 
         while (!GameOver)
         {
             direction = ChooseDirection();
 
-            Vector3 currentTilePos = currentTile.transform.localPosition;
+            Vector3 currentTilePos = currentTile.transform.position;
             Vector3 newTilePos = currentTilePos + direction;
 
             currentTile = AddTileToDictionary(newTilePos);
 
             yield return new WaitForSecondsRealtime(delay);
 
-            previousTile!.SetActive(false);
+            previousTile!.GetComponent<GameTile>().Hide();
         }
     }
 
@@ -58,13 +66,13 @@ public class TileGenerator : MonoBehaviour
         Vector3 newDirection;
 
         if (axis == 0)
-            newDirection = (Vector3.right * move).normalized;
+            newDirection = (Vector3.right * move).normalized * spawnDistance;
         else
-            newDirection = (Vector3.forward * move).normalized;
+            newDirection = (Vector3.forward * move).normalized * spawnDistance;
 
-        if (currentTile.transform.localPosition + newDirection == previousTile.transform.localPosition)
+        if (currentTile.transform.position + newDirection == previousTile?.transform.position)
             return ChooseDirection();
-
+        
         else return newDirection;
     }
 
