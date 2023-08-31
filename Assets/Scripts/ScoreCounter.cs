@@ -4,8 +4,6 @@ using TMPro;
 
 public class ScoreCounter : MonoBehaviour
 {
-    [SerializeField] private GameObject player;
-
     private TextMeshProUGUI tmp;
 
     void Start()

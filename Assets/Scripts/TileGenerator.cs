@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
 using UnityEngine;
 
     // ToDo: Add a coin tile
@@ -10,7 +9,7 @@ public class TileGenerator : MonoBehaviour
 
     [SerializeField] private Dictionary<Vector3, GameObject> tiles = new();
 
-    [SerializeField] private int spawnDistance = 2;
+    [SerializeField] private int spawnDistance;
 
     private GameObject currentTile;
     private GameObject previousTile;
@@ -27,6 +26,9 @@ public class TileGenerator : MonoBehaviour
 
     void Start()
     {
+        GameOver = false;
+        firstMove = true;
+
         StartCoroutine(SpawnTile(1f));
     }
 
@@ -39,7 +41,7 @@ public class TileGenerator : MonoBehaviour
             Vector3 zeroPos = Vector3.zero;
             currentTile = AddTileToDictionary(zeroPos);
 
-            yield return new WaitForSecondsRealtime(delay * 2f);
+            yield return new WaitForSecondsRealtime(delay);
         }
 
         while (!GameOver)
