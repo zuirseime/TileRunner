@@ -1,16 +1,20 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class Globals : MonoBehaviour {
     [SerializeField] private float baseDelay = 2f;
-    private float delay;
+    [SerializeField] private float delay;
     private int previousScore = -1;
 
+    public static PlaySetName CurrentPlaySet { get; set; } = PlaySetName.Standard;
+    public static int MoneyCount { get; set; } = 0;
+
+    [field: SerializeField] public Vector3 ZeroPosition { get; set; } = Vector3.zero;
     [field: SerializeField] public bool IsStarted { get; set; } = false;
-    [field: SerializeField] public Vector3 CameraStartPosition { get; set; } = Vector3.zero; 
     [field: SerializeField] public int Score { get; set; } = 0;
     [field: SerializeField] public bool GameOver { get; set; } = false;
     [field: SerializeField] public int MoveDistance { get; set; } = 1;
-    [field: SerializeField] public float Delay {
+    public float Delay {
         get => delay;
         set {
             if (value < 0.05f) delay = 0.05f;
@@ -18,15 +22,18 @@ public class Globals : MonoBehaviour {
         }
     }
 
-    [SerializeField] private PlayerController player;
+    [SerializeField] private Player player;
+
+    [field: SerializeField] public List<PlaySet> PlaySets { get; set; }
 
     private void Start() {
         Delay = baseDelay;
-
-        CameraStartPosition = Camera.main.transform.position;
     }
 
     private void Update() {
+        if (Score != 0)
+            IsStarted = true;
+
         if (player.transform.position.y < -1f)
             GameOver = true;
 
@@ -37,5 +44,8 @@ public class Globals : MonoBehaviour {
 
             previousScore = Score;
         }
+    }
+
+    private void FixedUpdate() {
     }
 }
