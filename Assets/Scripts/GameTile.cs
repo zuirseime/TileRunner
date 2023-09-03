@@ -3,6 +3,8 @@ using UnityEngine;
 
 [RequireComponent(typeof(Collider))]
 public class GameTile : MonoBehaviour {
+    public bool HasCoin { get; private set; } = false;
+
     private Color[] baseColors;
     private Color[] targetColors;
 
@@ -10,6 +12,7 @@ public class GameTile : MonoBehaviour {
     private float fadeDuration;
 
     private Globals globals;
+    private GameObject coinSkin;
     private GameObject coin;
 
     void Start() {
@@ -17,20 +20,25 @@ public class GameTile : MonoBehaviour {
 
         gameObject.layer = LayerMask.NameToLayer("Tile");
 
-        int isCoin = Random.Range(0, 100);
-
-        if (isCoin < 25) {
-            GameObject coinSkin = globals.PlaySets.Find(n => n.Name == Globals.CurrentPlaySet).Coin;
-            coin = Instantiate(coinSkin, transform.localPosition, transform.rotation, transform);
-        }
-
         baseColors = new Color[GetComponent<Renderer>().materials.Length];
         targetColors = new Color[baseColors.Length];
+
+        coinSkin = globals.PlaySets.Find(n => n.Name == Globals.CurrentPlaySet).Coin;
 
         for (int i = 0; i < GetComponent<Renderer>().materials.Length; i++) {
             baseColors[i] = GetComponent<Renderer>().materials[i].color;
             targetColors[i] = new Color(baseColors[i].r / 2f, baseColors[i].g / 2f, baseColors[i].b / 2f, 0f);
         }
+    }
+
+    public bool TrySpawnCoin(int chance) {
+        if (Random.Range(0, 100) < chance) {
+            coin = Instantiate(coinSkin, transform.localPosition, transform.rotation, transform);
+            HasCoin = true;
+            return true;
+        }
+
+        return false;
     }
 
     void Update() {

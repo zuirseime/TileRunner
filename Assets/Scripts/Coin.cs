@@ -4,15 +4,11 @@ using UnityEngine;
 
 public class Coin : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
+    void Start() {
+        GetComponent<Collider>().isTrigger = true;
     }
 
-    // Update is called once per frame
-    void FixedUpdate()
-    {
+    void FixedUpdate() {
         transform.Rotate(0f, transform.rotation.y + 5f, 0f);
     }
 

@@ -5,7 +5,7 @@ using UnityEngine;
 
 // ToDo: Add a coin tile
 public class MapManager : MonoBehaviour {
-    [SerializeField] private Dictionary<Vector3, GameObject> tiles = new();
+    private Dictionary<Vector3, GameObject> tiles = new();
 
     private Globals globals;
     private GameObject currentTile;
@@ -18,8 +18,20 @@ public class MapManager : MonoBehaviour {
 
     private bool firstMove = true;
 
+    [SerializeField] private int leftToCoin;
+    [SerializeField] private int coinInterval = 3;
+
+    [Header("Chance settings")]
+    [SerializeField, Range(0, 100)] private int baseCoinChance = 40; // Normal - 35-40
+    [SerializeField] private int coinChance;
+    [SerializeField, Range(0, 100)] private int intervalRestoreChance = 75; // Normal - 75
+    private int chanceIncreaseFactor = 40;
+
     private void OnValidate() {
-        
+        if (coinChance < baseCoinChance)
+            coinChance = baseCoinChance;
+        else if (coinChance > 100)
+            coinChance = 100;
     }
 
     void Start()
@@ -27,6 +39,9 @@ public class MapManager : MonoBehaviour {
         globals = FindObjectOfType<Globals>();
 
         tileSkin = globals.PlaySets.Find(n => n.Name == Globals.CurrentPlaySet).Tile;
+
+        leftToCoin = coinInterval;
+        coinChance = baseCoinChance;
 
         StartCoroutine(SpawnTile());
     }
@@ -81,7 +96,8 @@ public class MapManager : MonoBehaviour {
             firstMove = false;
 
             Vector3 zeroPos = Vector3.zero;
-            firstTile = currentTile = AddTileToDictionary(zeroPos);
+            firstTile = currentTile = SpawnTile(zeroPos);
+            
 
             yield return new WaitForSecondsRealtime(globals.Delay);
 
@@ -113,7 +129,10 @@ public class MapManager : MonoBehaviour {
         Vector3 currentTilePos = currentTile.transform.position;
         Vector3 newTilePos = currentTilePos + direction;
 
-        currentTile = AddTileToDictionary(newTilePos);
+        currentTile = SpawnTile(newTilePos);
+        yield return null;
+        if (!currentTile.GetComponent<GameTile>().HasCoin)
+            SpawnCoin(currentTile);
 
         yield return new WaitForSecondsRealtime(globals.Delay);
     }
@@ -124,7 +143,7 @@ public class MapManager : MonoBehaviour {
     /// <returns>Spawning direction</returns>
     private Vector3 ChooseDirection()
     {
-        Vector3 newDirection = Vector3.zero;
+        Vector3 newDirection;
 
         while(true) {
             int axis = Random.Range(0, 2); // 0 for X, 1 for Z
@@ -148,7 +167,7 @@ public class MapManager : MonoBehaviour {
     /// </summary>
     /// <param name="position">Key of the tile and position where the tile has to be spawned</param>
     /// <returns>A new tile</returns>
-    private GameObject AddTileToDictionary(Vector3 position)
+    private GameObject SpawnTile(Vector3 position)
     {
         GameObject tile;
 
@@ -157,7 +176,7 @@ public class MapManager : MonoBehaviour {
         if (!tiles.ContainsKey(position))
         {
             tile = Instantiate(tileSkin, position, Quaternion.identity, transform);
-            tile.name = $"Tile [{position.x}|{position.z}]";
+            tile.gameObject.name = $"Tile [{position.x}, {position.z}]";
             tiles.Add(position, tile);
         }
         else
@@ -167,5 +186,28 @@ public class MapManager : MonoBehaviour {
         }
 
         return tile;
+    }
+
+    private void SpawnCoin(GameObject tile) {
+
+        if (leftToCoin == 0) {
+            GameTile tileInstance = tile.GetComponent<GameTile>();
+            bool hasCoin = tileInstance.TrySpawnCoin(coinChance);
+
+            if (hasCoin) {
+                if (Random.Range(0, 100) < intervalRestoreChance) {
+                    coinChance = baseCoinChance;
+                    leftToCoin = coinInterval;
+                }
+                else if (coinChance < 100 - chanceIncreaseFactor)
+                    coinChance += chanceIncreaseFactor;
+            }
+            else {
+                if (coinChance != baseCoinChance)
+                    coinChance += chanceIncreaseFactor;
+            }
+
+        } else if (leftToCoin > 0)
+            leftToCoin--;
     }
 }

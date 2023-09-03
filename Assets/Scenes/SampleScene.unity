@@ -1342,6 +1342,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5a58485c4a25777429a55e263c8c4a60, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  leftToCoin: 0
+  coinInterval: 3
+  baseCoinChance: 35
+  coinChance: 40
+  intervalRestoreChance: 85
 --- !u!4 &1570389212
 Transform:
   m_ObjectHideFlags: 0

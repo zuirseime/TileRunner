@@ -6,7 +6,7 @@ public class Globals : MonoBehaviour {
     [SerializeField] private float delay;
     private int previousScore = -1;
 
-    public static PlaySetName CurrentPlaySet { get; set; } = PlaySetName.Standard;
+    public static PlaySetName CurrentPlaySet { get; set; } = PlaySetName.Pixel;
     public static int MoneyCount { get; set; } = 0;
 
     [field: SerializeField] public Vector3 ZeroPosition { get; set; } = Vector3.zero;
@@ -34,11 +34,13 @@ public class Globals : MonoBehaviour {
         if (Score != 0)
             IsStarted = true;
 
-        if (player.transform.position.y < -1f)
+        if (player.transform.position.y < -1f) {
             GameOver = true;
+            Debug.Log(Delay);
+        }
 
-        if (Score % 5 == 0 && Score > previousScore) {
-            float reductionFactor = 1f - ((Score * .2f) / 100f);
+        if (Score % 10 == 0 && Score > previousScore) {
+            float reductionFactor = 1f - ((Score * .05f) / 100f);
             Delay *= reductionFactor;
             Delay = Mathf.Max(delay, .02f);
 
