@@ -31,25 +31,21 @@ public class Player : MonoBehaviour
     }
 
     void Update() {
-        InputHandler();
-
-        if (globals.GameOver) {
-            if (transform.position != globals.ZeroPosition)
-                transform.position = globals.ZeroPosition;
+        if (!globals.GameOver) {
+            InputHandler();
+            CheckPosition();
+        } else {
+            if (transform.position != Vector3.zero)
+                transform.position = Vector3.zero;
         }
-    }
-
-    private void FixedUpdate() {
-        CheckPosition();
     }
 
     /// <summary>
     /// Checks player position after it moves
     /// </summary>
     private void CheckPosition() {
-        if (!globals.GameOver) {
-            if (playerState == PlayerState.Moving) {
-            float speed = globals.MoveDistance / globals.Delay * .1f;
+        if (playerState == PlayerState.Moving) {
+            float speed = globals.MoveDistance * .05f;
             Quaternion lookRotation = Quaternion.LookRotation(rotationTarget);
             transform.position = Vector3.MoveTowards(transform.position, targetPosition, speed);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, lookRotation, 15f);
@@ -65,7 +61,6 @@ public class Player : MonoBehaviour
                 if (isGrounded) globals.Score++;
             }
         }
-        }
     }
 
     /// <summary>
@@ -80,7 +75,7 @@ public class Player : MonoBehaviour
     /// Handles user's input
     /// </summary>
     private void InputHandler() {
-        isGrounded = Physics.Raycast(transform.position, Vector3.down, 1f, tileLayer);
+        isGrounded = Physics.Raycast(transform.position, Vector3.down, .3f, tileLayer);
 
         if (Input.touchCount > 0) {
             Touch touch = Input.GetTouch(0);
@@ -96,6 +91,8 @@ public class Player : MonoBehaviour
 
                     targetPosition = transform.position + destination.normalized * globals.MoveDistance;
                     rotationTarget = transform.position + destination.normalized * 1000f;
+
+                    FindObjectOfType<AudioManager>().Play(SoundName.Move);
                     playerState = PlayerState.Moving;
                 }
             }

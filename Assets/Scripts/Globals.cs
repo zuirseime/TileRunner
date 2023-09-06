@@ -1,33 +1,42 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Globals : MonoBehaviour {
-    [SerializeField] private float baseDelay = 2f;
-    [SerializeField] private float delay;
-    private int previousScore = -1;
+    private IDataService dataService = new JsonDataService();
+    private int previousScore;
+    private Player player;
 
-    public static PlaySetName CurrentPlaySet { get; set; } = PlaySetName.Pixel;
-    public static int MoneyCount { get; set; } = 0;
+    public static PlaySetName CurrentPlaySet { get; set; }
+    public static int MoneyCount { get; set; }
+    public static int BestScore { get; set; }
 
-    [field: SerializeField] public Vector3 ZeroPosition { get; set; } = Vector3.zero;
-    [field: SerializeField] public bool IsStarted { get; set; } = false;
-    [field: SerializeField] public int Score { get; set; } = 0;
-    [field: SerializeField] public bool GameOver { get; set; } = false;
+    public int Score { get; set; } = 0;
+    public bool IsStarted { get; set; } = false;
+    public bool GameOver { get; set; } = false;
+
     [field: SerializeField] public int MoveDistance { get; set; } = 1;
-    public float Delay {
-        get => delay;
-        set {
-            if (value < 0.05f) delay = 0.05f;
-            else delay = value;
-        }
-    }
-
-    [SerializeField] private Player player;
-
+    [field: SerializeField] public float Delay { get; set; } = 1.2f;
     [field: SerializeField] public List<PlaySet> PlaySets { get; set; }
 
-    private void Start() {
-        Delay = baseDelay;
+    [SerializeField] private PlayerStats playerStats;
+
+    private void Awake() {
+        Application.targetFrameRate = 60;
+
+        player = FindObjectOfType<Player>();
+
+        DeserializeJson();
+
+        CurrentPlaySet = playerStats.CurrentPlaySet;
+        MoneyCount = playerStats.Money;
+        BestScore = playerStats.BestScore;
+        for (int i = 0; i < playerStats.SetsInfo.Count; i++) {
+            PlaySets[i].IsPurchased = playerStats.SetsInfo[i];
+        }
+
+        previousScore = Score;
     }
 
     private void Update() {
@@ -36,18 +45,41 @@ public class Globals : MonoBehaviour {
 
         if (player.transform.position.y < -1f) {
             GameOver = true;
-            Debug.Log(Delay);
+            FindObjectOfType<AudioManager>().Play(SoundName.Death);
+
+            playerStats.CurrentPlaySet = CurrentPlaySet;
+            playerStats.Money = MoneyCount;
+            playerStats.BestScore = BestScore;
+            for (int i = 0; i < playerStats.SetsInfo.Count; i++) {
+                playerStats.SetsInfo[i] = PlaySets[i].IsPurchased;
+            }
+
+            SerializeJson();
         }
 
-        if (Score % 10 == 0 && Score > previousScore) {
-            float reductionFactor = 1f - ((Score * .05f) / 100f);
-            Delay *= reductionFactor;
-            Delay = Mathf.Max(delay, .02f);
+        if (Score > BestScore) {
+            BestScore = Score;
+        }
 
+        if (Score > previousScore && Score % 5 == 0) {
+            Delay *= 0.95f;
             previousScore = Score;
         }
     }
 
-    private void FixedUpdate() {
+    public void SerializeJson() {
+        if (dataService.SaveData(playerStats, "/player-stats.json", true)) {
+            Debug.Log("Player stats were saved");
+        } else {
+            Debug.LogError("Couldn't save file!");
+        }
+    }
+
+    public void DeserializeJson() {
+        try {
+            playerStats = dataService.LoadData<PlayerStats>("/player-stats.json", true);
+        } catch (Exception ex) {
+            Debug.LogError($"Couldn't read file!");
+        }
     }
 }

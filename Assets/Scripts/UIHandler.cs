@@ -8,20 +8,29 @@ using UnityEngine.UI;
 public class UIHandler : MonoBehaviour {
     [SerializeField] private TextMeshProUGUI score;
     [SerializeField] private TextMeshProUGUI startHint;
-    [SerializeField] private Button restartButton;
-    [SerializeField] private GameObject playSetMenu;
+    [SerializeField] private TextMeshProUGUI gameOverCurrenScore;
+    [SerializeField] private TextMeshProUGUI gameOverBestScore;
     [SerializeField] private TextMeshProUGUI money;
 
+    [SerializeField] private GameObject restartMenu;
+    [SerializeField] private GameObject inventory;
+    [SerializeField] private GameObject buttonPanel;
+
+    [SerializeField] private Sprite unlockedFrame;
+    [SerializeField] private Sprite lockedFrame;
+
     private Globals globals;
+    private Player player;
  
     void Start() {
         globals = FindObjectOfType<Globals>();
+        player = FindAnyObjectByType<Player>();
 
         startHint.gameObject.SetActive(true);
 
         FillPlaySetMenu();
 
-        StartCoroutine(TextBlink(startHint, 20f, 28f, 1f));
+        StartCoroutine(TextBlink(startHint, 28f, 36f, 1f));
     }
 
     void Update() {
@@ -29,27 +38,46 @@ public class UIHandler : MonoBehaviour {
         money.text = Globals.MoneyCount.ToString();
 
         if (globals.GameOver) {
-            restartButton.gameObject.SetActive(true);
             startHint.gameObject.SetActive(false);
+            restartMenu.SetActive(true);
+            inventory.SetActive(false);
+            gameOverCurrenScore.text = globals.Score.ToString();
+            gameOverBestScore.text = Globals.BestScore.ToString();
         }
 
-        if (globals.IsStarted)
+        if (globals.IsStarted) {
+            buttonPanel.SetActive(false);
+            inventory.SetActive(false);
+
             StartCoroutine(FadeHintOut(startHint, .25f));
+        }
     }
 
     private void FillPlaySetMenu() {
-        UnityEngine.GameObject template = playSetMenu.transform.GetChild(0).gameObject;
-        UnityEngine.GameObject playSet;
+        GameObject item = inventory.transform.GetChild(0).gameObject;
+        GameObject playSet, locker, price, frame;
 
         for (int i = 0; i < globals.PlaySets.Count; i++) {
-            playSet = Instantiate(template, playSetMenu.transform);
+            playSet = Instantiate(item, inventory.transform);
             playSet.transform.GetChild(0).GetComponent<Image>().sprite = globals.PlaySets[i].Icon;
 
-            // playSet.GetComponent<Button>().onClick.AddListener(delegate() { OnChangePlaySet(i); });
-            playSet.GetComponent<Button>().AddEventListener(i, OnChangePlaySet);
+            frame = playSet.transform.GetChild(1).gameObject;
+            locker = playSet.transform.GetChild(2).gameObject;
+            price = locker.transform.GetChild(1).gameObject;
+
+            price.GetComponent<TextMeshProUGUI>().text = globals.PlaySets[i].Price.ToString();
+
+            playSet.GetComponent<Button>().AddEventListener(i, frame, locker, OnChangePlaySet);
+
+            if (globals.PlaySets[i].IsPurchased || globals.PlaySets[i].Price == 0) {
+                frame.GetComponent<Image>().sprite = unlockedFrame;
+                Destroy(locker);
+            } else {
+                frame.GetComponent<Image>().sprite = lockedFrame;
+            }
         }
 
-        Destroy(template);
+        Destroy(item);
     }
 
     /// <summary>
@@ -59,15 +87,28 @@ public class UIHandler : MonoBehaviour {
         SceneManager.LoadScene($"Scenes/{SceneManager.GetActiveScene().name}");
     }
 
-    public void OnOpenPlaySetMenu() {
-        bool menuActivity = playSetMenu.activeSelf;
-        playSetMenu.SetActive(!menuActivity);
+    public void OnOpenInventory() {
+        bool menuActivity = inventory.activeSelf;
+        inventory.SetActive(!menuActivity);
+        player.enabled = menuActivity;
     }
 
-    private void OnChangePlaySet(int id) {
-        Debug.Log($"Item {id} was selected");
-        Globals.CurrentPlaySet = (PlaySetName)id; 
-        OnRestart();
+    private void OnChangePlaySet(int id, GameObject frame, GameObject locker) {
+        PlaySet set = globals.PlaySets[id];
+
+        if (set.IsPurchased || set.Price == 0) {
+            Globals.CurrentPlaySet = set.Name;
+            OnRestart();
+        } else {
+            if (Globals.MoneyCount >= set.Price) {
+                frame.GetComponent<Image>().sprite = unlockedFrame;
+                set.IsPurchased = true;
+                Globals.MoneyCount -= set.Price;
+                PlayerPrefs.SetInt($"{(int)set.Name}-isPurchased", 1);
+                PlayerPrefs.Save();
+                Destroy(locker);
+            }
+        }
     }
 
     /// <summary>
@@ -130,5 +171,9 @@ public class UIHandler : MonoBehaviour {
 public static class ButtonExtention {
     public static void AddEventListener<T>(this Button btn, T param, Action<T> OnClick) {
         btn.onClick.AddListener(() => { OnClick(param); });
+    }
+
+    public static void AddEventListener<T1, T2, T3>(this Button btn, T1 param1, T2 param2, T3 param3, Action<T1, T2, T3> OnClick) {
+        btn.onClick.AddListener(() => { OnClick(param1, param2, param3); });
     }
 }

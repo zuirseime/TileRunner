@@ -15,6 +15,7 @@ public class MapManager : MonoBehaviour {
     private MapState mapState = MapState.Playable;
 
     private GameObject tileSkin;
+    private GameObject coinSkin;
 
     private bool firstMove = true;
 
@@ -38,7 +39,9 @@ public class MapManager : MonoBehaviour {
     {
         globals = FindObjectOfType<Globals>();
 
-        tileSkin = globals.PlaySets.Find(n => n.Name == Globals.CurrentPlaySet).Tile;
+        PlaySet set = globals.PlaySets.Find(n => n.Name == Globals.CurrentPlaySet);
+
+        (tileSkin, coinSkin) = (set.Tile, set.Coin);
 
         leftToCoin = coinInterval;
         coinChance = baseCoinChance;
@@ -66,10 +69,10 @@ public class MapManager : MonoBehaviour {
             }
             if (!tilesActivities.Contains(true))
                 mapState = MapState.Hidden;
-        } else if (mapState == MapState.Hidden) {
-            if (!transform.GetChild(tiles.Count - 1).gameObject.activeSelf)
-                StartCoroutine(RevealMap());
-        }
+            } else if (mapState == MapState.Hidden) {
+                if (!transform.GetChild(tiles.Count - 1).gameObject.activeSelf)
+                    StartCoroutine(RevealMap());
+            }
         }
     }
 
@@ -80,6 +83,7 @@ public class MapManager : MonoBehaviour {
     private IEnumerator RevealMap() {
         for (int i = 0; i < tiles.Count; i++) {
             transform.GetChild(i).gameObject.SetActive(true);
+            //FindObjectOfType<AudioManager>().Play(SoundName.Reveal);
             yield return new WaitForSecondsRealtime(.1f);
         }
         mapState = MapState.Revealed;
@@ -97,9 +101,8 @@ public class MapManager : MonoBehaviour {
 
             Vector3 zeroPos = Vector3.zero;
             firstTile = currentTile = SpawnTile(zeroPos);
-            
 
-            yield return new WaitForSecondsRealtime(globals.Delay);
+            yield return null;
 
             StartCoroutine(ChangeCurrentTile());
         }
@@ -130,9 +133,8 @@ public class MapManager : MonoBehaviour {
         Vector3 newTilePos = currentTilePos + direction;
 
         currentTile = SpawnTile(newTilePos);
-        yield return null;
-        if (!currentTile.GetComponent<GameTile>().HasCoin)
-            SpawnCoin(currentTile);
+        //yield return null;
+        SpawnCoin(newTilePos);
 
         yield return new WaitForSecondsRealtime(globals.Delay);
     }
@@ -176,7 +178,7 @@ public class MapManager : MonoBehaviour {
         if (!tiles.ContainsKey(position))
         {
             tile = Instantiate(tileSkin, position, Quaternion.identity, transform);
-            tile.gameObject.name = $"Tile [{position.x}, {position.z}]";
+            tile.name = $"Tile [{position.x}, {position.z}]";
             tiles.Add(position, tile);
         }
         else
@@ -188,24 +190,16 @@ public class MapManager : MonoBehaviour {
         return tile;
     }
 
-    private void SpawnCoin(GameObject tile) {
+    private void SpawnCoin(Vector3 position) {
 
         if (leftToCoin == 0) {
-            GameTile tileInstance = tile.GetComponent<GameTile>();
-            bool hasCoin = tileInstance.TrySpawnCoin(coinChance);
-
-            if (hasCoin) {
-                if (Random.Range(0, 100) < intervalRestoreChance) {
-                    coinChance = baseCoinChance;
-                    leftToCoin = coinInterval;
-                }
-                else if (coinChance < 100 - chanceIncreaseFactor)
-                    coinChance += chanceIncreaseFactor;
-            }
-            else {
-                if (coinChance != baseCoinChance)
-                    coinChance += chanceIncreaseFactor;
-            }
+            Instantiate(coinSkin, position, Quaternion.identity, transform);
+            
+            if (Random.Range(0, 100) < intervalRestoreChance) {
+                coinChance = baseCoinChance;
+                leftToCoin = coinInterval;
+            } else if (coinChance < 100 - chanceIncreaseFactor)
+                coinChance += chanceIncreaseFactor;
 
         } else if (leftToCoin > 0)
             leftToCoin--;

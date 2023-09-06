@@ -15,6 +15,7 @@ public class Coin : MonoBehaviour
     private void OnTriggerEnter(Collider other) {
         if (other.TryGetComponent(out Player player)) {
             GetComponent<Collider>().enabled = false;
+            FindObjectOfType<AudioManager>().Play(SoundName.Coin);
             Globals.MoneyCount++;
             Destroy(gameObject);
         }
