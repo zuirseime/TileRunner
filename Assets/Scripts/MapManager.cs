@@ -4,20 +4,19 @@ using System.Linq;
 using UnityEngine;
 
 // ToDo: Add a coin tile
-public class MapManager : MonoBehaviour {
+public class MapManager : MonoBehaviour, IObserver {
     private Dictionary<Vector3, GameObject> tiles = new();
 
-    private Globals globals;
+    private World world;
     private GameObject currentTile;
     private GameObject previousTile;
     private GameObject firstTile;
     private Vector3 direction;
-    private MapState mapState = MapState.Playable;
 
     private GameObject tileSkin;
     private GameObject coinSkin;
 
-    private bool firstMove = true;
+    //private bool firstMove = true;
 
     [SerializeField] private int leftToCoin;
     [SerializeField] private int coinInterval = 3;
@@ -37,9 +36,10 @@ public class MapManager : MonoBehaviour {
 
     void Start()
     {
-        globals = FindObjectOfType<Globals>();
+        world = FindObjectOfType<World>();
+        world.AddObserver(this);
 
-        PlaySet set = globals.PlaySets.Find(n => n.Name == Globals.CurrentPlaySet);
+        PlaySet set = world.PlaySets.Find(n => n.Name == World.PlayerStats.CurrentPlaySet);
 
         (tileSkin, coinSkin) = (set.Tile, set.Coin);
 
@@ -50,43 +50,15 @@ public class MapManager : MonoBehaviour {
     }
 
     private void Update() {
-        if (globals.GameOver) {
-            CheckMapState();
-        }
+        
     }
 
-    /// <summary>
-    /// Checks the map state and performs certain actions depending on its value
-    /// </summary>
-    private void CheckMapState() {
-        bool[] tilesActivities = new bool[tiles.Count];
+    private void GameOver() {
+        Debug.Log("Map's game over");
 
-        if (tiles.Count > 0) {
-            if (mapState == MapState.Playable) {
-            for (int i = 0; i < tiles.Count; i++) {
-                transform.GetChild(i).gameObject.SetActive(false);
-                tilesActivities[i] = transform.GetChild(i).gameObject.activeSelf;
-            }
-            if (!tilesActivities.Contains(true))
-                mapState = MapState.Hidden;
-            } else if (mapState == MapState.Hidden) {
-                if (!transform.GetChild(tiles.Count - 1).gameObject.activeSelf)
-                    StartCoroutine(RevealMap());
-            }
+        for (int i = 0; i < transform.childCount; i++) {
+            transform.GetChild(i).gameObject.SetActive(false);
         }
-    }
-
-    /// <summary>
-    /// Reveals map after the game over
-    /// </summary>
-    /// <returns></returns>
-    private IEnumerator RevealMap() {
-        for (int i = 0; i < tiles.Count; i++) {
-            transform.GetChild(i).gameObject.SetActive(true);
-            //FindObjectOfType<AudioManager>().Play(SoundName.Reveal);
-            yield return new WaitForSecondsRealtime(.1f);
-        }
-        mapState = MapState.Revealed;
     }
 
     /// <summary>
@@ -95,9 +67,9 @@ public class MapManager : MonoBehaviour {
     /// <returns></returns>
     private IEnumerator SpawnTile()
     {
-        if (firstMove)
+        if (!world.isPlaying)
         {
-            firstMove = false;
+            //firstMove = false;
 
             Vector3 zeroPos = Vector3.zero;
             firstTile = currentTile = SpawnTile(zeroPos);
@@ -107,18 +79,18 @@ public class MapManager : MonoBehaviour {
             StartCoroutine(ChangeCurrentTile());
         }
 
-        while (!globals.GameOver)
+        while (!world.gameOver)
         {
-            if (globals.IsStarted) {
+            if (world.isPlaying) {
                 if (firstTile.activeSelf)
-                    firstTile.GetComponent<GameTile>().Hide();
+                    firstTile.GetComponent<Tile>().Hide();
 
                 StartCoroutine(ChangeCurrentTile());
 
-                previousTile!.GetComponent<GameTile>().Hide();
+                previousTile!.GetComponent<Tile>().Hide();
             }
 
-            yield return new WaitForSecondsRealtime(globals.Delay);
+            yield return new WaitForSecondsRealtime(world.Delay);
         }
     }
 
@@ -133,10 +105,9 @@ public class MapManager : MonoBehaviour {
         Vector3 newTilePos = currentTilePos + direction;
 
         currentTile = SpawnTile(newTilePos);
-        //yield return null;
         SpawnCoin(newTilePos);
 
-        yield return new WaitForSecondsRealtime(globals.Delay);
+        yield return new WaitForSecondsRealtime(world.Delay);
     }
 
     /// <summary>
@@ -153,9 +124,9 @@ public class MapManager : MonoBehaviour {
             float move = Mathf.Sign(Random.Range(-1f, 1f));
 
             if (axis == 0)
-                newDirection = (Vector3.right * move).normalized * globals.MoveDistance;
+                newDirection = (Vector3.right * move).normalized * world.MoveDistance;
             else
-                newDirection = (Vector3.forward * move).normalized * globals.MoveDistance;
+                newDirection = (Vector3.forward * move).normalized * world.MoveDistance;
 
             if (currentTile.transform.position + newDirection == previousTile?.transform.position)
                 continue;
@@ -203,5 +174,10 @@ public class MapManager : MonoBehaviour {
 
         } else if (leftToCoin > 0)
             leftToCoin--;
+    }
+
+    public void OnNotify(NotificationType notification) {
+        if (notification == NotificationType.Death)
+            GameOver();
     }
 }

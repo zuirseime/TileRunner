@@ -1,11 +1,17 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(BoxCollider))]
 public class Coin : MonoBehaviour
 {
-    void Start() {
-        GetComponent<Collider>().isTrigger = true;
+    private BoxCollider coinCollider;
+
+    [SerializeField, Range(1, 10)] private int cost = 1;
+
+    void Awake() {
+        coinCollider = GetComponent<BoxCollider>();
+        coinCollider.isTrigger = true;
+        coinCollider.size = new Vector3(0.5f, 1f, 0.5f);
+        coinCollider.center = new Vector3(0f, 0.49f, 0f);
     }
 
     void FixedUpdate() {
@@ -16,7 +22,7 @@ public class Coin : MonoBehaviour
         if (other.TryGetComponent(out Player player)) {
             GetComponent<Collider>().enabled = false;
             FindObjectOfType<AudioManager>().Play(SoundName.Coin);
-            Globals.MoneyCount++;
+            player.GetCoin(cost);
             Destroy(gameObject);
         }
     }

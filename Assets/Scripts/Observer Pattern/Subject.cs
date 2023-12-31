@@ -2,17 +2,20 @@
 using UnityEngine;
 
 public abstract class Subject : MonoBehaviour {
-    private List<Observer> observers = new List<Observer>();
+    private List<IObserver> observers = new();
 
-    public void AddObserver(Observer observer) {
+    public void AddObserver(IObserver observer) {
         observers.Add(observer);
     }
 
-    public void RemoveObserver(Observer observer) {
+    public void RemoveObserver(IObserver observer) {
         observers.Remove(observer);
     }
 
-    protected void Notify(NotificationType notification) {
-        observers.ForEach(observer => observer.OnNotify(notification));
+    protected void NotifyObservers(NotificationType notification) {
+        //observers.ForEach(o => o.OnNotify(notification));
+        foreach (IObserver observer in observers) {
+            observer.OnNotify(notification);
+        }
     }
 }

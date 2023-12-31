@@ -1,7 +1,8 @@
+using System;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Play Set")]
-public class PlaySet : ScriptableObject
+[Serializable]
+public class PlaySet
 {
 	[field: SerializeField] public PlaySetName Name {get; set; }
 

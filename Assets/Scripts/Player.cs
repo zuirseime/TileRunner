@@ -1,8 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody), typeof(Collider))]
-public class Player : MonoBehaviour
-{
+public class Player : MonoBehaviour, IObserver {
     [SerializeField] private LayerMask tileLayer;
     [SerializeField] private bool isGrounded = true;
 
@@ -14,29 +13,31 @@ public class Player : MonoBehaviour
     private Vector2 swipeStartPosition;
     private float swipeThreshold = 25f;
 
-    private Globals globals;
+    private World world;
 
     private GameObject playerSkin;
 
     void Start() {
-        globals = FindObjectOfType<Globals>();
+        world = FindObjectOfType<World>();
+        world.AddObserver(this);
 
         Input.multiTouchEnabled = false;
 
         body = GetComponent<Rigidbody>();
         body.drag = 0f;
 
-        playerSkin = globals.PlaySets.Find(n => n.Name == Globals.CurrentPlaySet).Player;
+        playerSkin = world.PlaySets.Find(n => n.Name == World.PlayerStats.CurrentPlaySet).Player;
         Instantiate(playerSkin, transform.localPosition, transform.rotation, transform);
     }
 
+    //private void OnDisable() {
+    //    world.RemoveObserver(this);
+    //}
+
     void Update() {
-        if (!globals.GameOver) {
+        if (!world.gameOver) {
             InputHandler();
             CheckPosition();
-        } else {
-            if (transform.position != Vector3.zero)
-                transform.position = Vector3.zero;
         }
     }
 
@@ -45,7 +46,7 @@ public class Player : MonoBehaviour
     /// </summary>
     private void CheckPosition() {
         if (playerState == PlayerState.Moving) {
-            float speed = globals.MoveDistance * .05f;
+            float speed = world.MoveDistance * .05f;
             Quaternion lookRotation = Quaternion.LookRotation(rotationTarget);
             transform.position = Vector3.MoveTowards(transform.position, targetPosition, speed);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, lookRotation, 15f);
@@ -58,7 +59,7 @@ public class Player : MonoBehaviour
                 transform.position = Vector3Int.RoundToInt(transform.position);
                 transform.rotation = RoundRotation();
 
-                if (isGrounded) globals.Score++;
+                if (isGrounded) world.Score++;
             }
         }
     }
@@ -89,7 +90,7 @@ public class Player : MonoBehaviour
                     Vector3 destination = Mathf.Abs(swipeDelta.x) > Mathf.Abs(swipeDelta.y) ? 
                                           Vector3.right * swipeDelta.x : Vector3.forward * swipeDelta.y;
 
-                    targetPosition = transform.position + destination.normalized * globals.MoveDistance;
+                    targetPosition = transform.position + destination.normalized * world.MoveDistance;
                     rotationTarget = transform.position + destination.normalized * 1000f;
 
                     FindObjectOfType<AudioManager>().Play(SoundName.Move);
@@ -97,5 +98,19 @@ public class Player : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void GetCoin(int worth) => world.localMoney += worth;
+
+    public void OnNotify(NotificationType notification) {
+        if (notification == NotificationType.Death)
+            GameOver();
+    }
+
+    private void GameOver() {
+        Debug.Log("Player's game over");
+        FindObjectOfType<AudioManager>().Play(SoundName.Death);
+        gameObject.SetActive(false);
+        //world.RemoveObserver(this);
     }
 }

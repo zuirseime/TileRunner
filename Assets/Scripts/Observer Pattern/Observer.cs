@@ -1,6 +1,3 @@
-﻿using System;
-using UnityEngine;
-
-public abstract class Observer : MonoBehaviour {
-    public abstract void OnNotify(NotificationType notification);
+﻿public interface IObserver {
+    public void OnNotify(NotificationType notification);
 }

@@ -2,14 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GameCamera : MonoBehaviour
+public class GameCamera : MonoBehaviour, IObserver
 {
     [SerializeField] private Transform player;
     [SerializeField] private Transform mapRef;
+    [SerializeField] private Vector3 offset;
 
     private Camera mainCamera;
-    private Globals globals;
-    private Vector3 offset;
+    private World world;
 
     private Vector3 jointCenter;
     private float cameraReturnDuration = 2f;
@@ -23,8 +23,12 @@ public class GameCamera : MonoBehaviour
         }
 
         mainCamera = GetComponent<Camera>();
-        globals = FindObjectOfType<Globals>();
-        offset = transform.position - player.position;
+        world = FindObjectOfType<World>();
+        world.AddObserver(this);
+    }
+
+    private void OnDisable() {
+        world.RemoveObserver(this);
     }
 
     private void Update() {
@@ -33,16 +37,27 @@ public class GameCamera : MonoBehaviour
 
     void LateUpdate()
     {
-        if (!globals.GameOver)
+        if (!world.gameOver) {
             transform.position = FollowPlayer();
-        else ReturnCameraToStart();
+            transform.LookAt(player);
+        }
+        //else ReturnCameraToStart();
+    }
+
+    private void GameOver() {
+        Debug.Log("Camera's game over");
     }
 
     /// <summary>
     /// Makes camera follows player
     /// </summary>
     /// <returns>New camera position</returns>
-    private Vector3 FollowPlayer() => Vector3.Lerp(transform.position, player.position + offset, Time.deltaTime * 3f);
+    private Vector3 FollowPlayer() {
+        Vector3 desiredPosition = player.position + offset;
+        Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, Time.deltaTime * 3f);
+
+        return smoothedPosition;
+    }
 
     /// <summary>
     /// Makes camera returns to start position and increases it's size
@@ -54,7 +69,7 @@ public class GameCamera : MonoBehaviour
             for (int i = 0; i < mapRef.childCount; i++) {
             if (mapRef.GetChild(i).gameObject.activeSelf)
                 jointCenter += mapRef.GetChild(i).transform.position;
-        }
+            }
 
         jointCenter /= mapRef.childCount;
         jointCenter += offset;
@@ -64,7 +79,12 @@ public class GameCamera : MonoBehaviour
             elapsedTime += Time.deltaTime;
 
             transform.position = Vector3.Lerp(transform.position, jointCenter, elapsedTime / cameraReturnDuration);
-            mainCamera.orthographicSize = Mathf.Lerp(mainCamera.orthographicSize, 10f, elapsedTime / cameraReturnDuration);
+            mainCamera.fieldOfView = Mathf.Lerp(mainCamera.fieldOfView, 120f, elapsedTime / cameraReturnDuration);
         }
+    }
+
+    public void OnNotify(NotificationType notification) {
+        if (notification == NotificationType.Death)
+            GameOver();
     }
 }
