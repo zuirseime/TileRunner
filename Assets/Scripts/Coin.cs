@@ -5,7 +5,7 @@ public class Coin : MonoBehaviour
 {
     private BoxCollider coinCollider;
 
-    [SerializeField, Range(1, 10)] private int cost = 1;
+    [SerializeField, Range(1, 10)] private int cost = 10;
 
     void Awake() {
         coinCollider = GetComponent<BoxCollider>();

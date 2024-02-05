@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.44402242, g: 0.49316543, b: 0.5722324, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -3996,6 +3996,15 @@ MonoBehaviour:
   doubleCoins: {fileID: 1171455038}
   unlockedFrame: {fileID: 21300000, guid: c35f30b18ece5e445b699858be8635d1, type: 3}
   lockedFrame: {fileID: 21300000, guid: d165df7473d562f4285858afa98d8fa2, type: 3}
+  itemStates:
+  - Text: Chosen
+    Color: {r: 0.58431375, g: 0.64705884, b: 0.6509804, a: 1}
+  - Text: Choose
+    Color: {r: 0.27262354, g: 0.8862745, b: 0.1215686, a: 1}
+  - Text: Buy
+    Color: {r: 0.8862745, g: 0.83661747, b: 0.1215686, a: 1}
+  - Text: Locked
+    Color: {r: 0.8862745, g: 0.2901961, b: 0.1215686, a: 1}
 --- !u!1 &1171455038
 GameObject:
   m_ObjectHideFlags: 0

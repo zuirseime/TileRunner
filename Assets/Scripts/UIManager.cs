@@ -1,11 +1,23 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour, IObserver {
+    [Serializable]
+    public class ItemState {
+        public string Text;
+        public Color Color;
+
+        public ItemState(string text, Color color) {
+            Text = text;
+            Color = color;
+        }
+    }
+
     [SerializeField] private TextMeshProUGUI score;
     [SerializeField] private TextMeshProUGUI startHint;
     [SerializeField] private TextMeshProUGUI gameOverCurrenScore;
@@ -24,6 +36,8 @@ public class UIManager : MonoBehaviour, IObserver {
 
     [SerializeField] private Sprite unlockedFrame;
     [SerializeField] private Sprite lockedFrame;
+
+    [SerializeField] private List<ItemState> itemStates;
 
     private World world;
     private Player player;
@@ -118,29 +132,38 @@ public class UIManager : MonoBehaviour, IObserver {
         Color.Lerp(baseColor, new Color(baseColor.r, baseColor.g, baseColor.b, destinationAlpha), elapsedTime / speedUpVisibilityDuration);
 
     private void FillInventory() {
-        GameObject playSet, locker, price, frame;
+        GameObject item;
 
         for (int i = 0; i < world.PlaySets.Count; i++) {
-            playSet = Instantiate(inventoryItemPrefab, inventoryContent.transform);
-            playSet.transform.GetChild(0).GetChild(0).GetComponent<Image>().sprite = world.PlaySets[i].Icon;
+            PlaySet playSet = world.PlaySets[i];
+            item = Instantiate(inventoryItemPrefab, inventoryContent.transform);
 
-            //frame = playSet.transform.GetChild(1).gameObject;
-            //locker = playSet.transform.GetChild(2).gameObject;
-            //price = locker.transform.GetChild(1).gameObject;
+            item.transform.GetChild(0).GetComponentInChildren<Image>().sprite = playSet.Icon;
+            item.transform.GetChild(0).GetComponentInChildren<TextMeshProUGUI>().text = $"{playSet.Price}";
 
-            //price.GetComponent<TextMeshProUGUI>().text = world.PlaySets[i].Price.ToString();
-            //playSet.GetComponent<Button>().AddEventListener(i, frame, locker, OnChangePlaySet);
-            Button button = playSet.transform.GetChild(1).GetComponent<Button>();
+            Button button = item.GetComponentInChildren<Button>();
+            Image buttonImage = button.GetComponent<Image>();
             TextMeshProUGUI buttonText = button.transform.GetComponentInChildren<TextMeshProUGUI>();
-            button.AddEventListener(i, button, OnChangePlaySet);
-            //playSet.GetComponent<Button>().AddEventListener(i, OnChangePlaySet);
 
-            //if (world.PlaySets[i].IsPurchased || world.PlaySets[i].Price == 0) {
-            //    frame.GetComponent<Image>().sprite = unlockedFrame;
-            //    Destroy(locker);
-            //} else {
-            //    frame.GetComponent<Image>().sprite = lockedFrame;
-            //}
+            if (playSet.IsPurchased) {
+                Destroy(item.transform.GetChild(0).transform.GetChild(1).gameObject);
+            }
+
+            if (playSet.IsPurchased && playSet.Name == World.PlayerStats.CurrentPlaySet) {
+                buttonImage.color = itemStates[0].Color;
+                buttonText.text = itemStates[0].Text;
+            } else if (playSet.IsPurchased) {
+                buttonImage.color = itemStates[1].Color;
+                buttonText.text = itemStates[1].Text;
+            } else if (!playSet.IsPurchased && World.PlayerStats.Money >= playSet.Price) {
+                buttonImage.color = itemStates[2].Color;
+                buttonText.text = itemStates[2].Text;
+            } else {
+                buttonImage.color = itemStates[3].Color;
+                buttonText.text = itemStates[3].Text;
+            }
+
+            button.AddEventListener(i, button, OnChangePlaySet);
         }
     }
 

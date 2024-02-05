@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 public class World : Subject {
@@ -78,6 +79,7 @@ public class World : Subject {
                 PlaySets[i].IsPurchased = PlayerStats.SetsInfo[i];
             }
         } catch {
+            PlayerStats = PlayerStats.Default;
             Debug.LogError($"Couldn't read file!");
         }
     }
