@@ -13,9 +13,6 @@ public abstract class Subject : MonoBehaviour {
     }
 
     protected void NotifyObservers(NotificationType notification) {
-        //observers.ForEach(o => o.OnNotify(notification));
-        foreach (IObserver observer in observers) {
-            observer.OnNotify(notification);
-        }
+        observers.ForEach(o => o.OnNotify(notification));
     }
 }

@@ -31,9 +31,9 @@ public class Player : MonoBehaviour, IObserver {
         Instantiate(playerSkin, transform.localPosition, transform.rotation, transform);
     }
 
-    //private void OnDisable() {
-    //    world.RemoveObserver(this);
-    //}
+    private void OnDisable() {
+        //world.RemoveObserver(this);
+    }
 
     void Update() {
         if (!world.gameOver) {
@@ -109,7 +109,6 @@ public class Player : MonoBehaviour, IObserver {
     }
 
     private void GameOver() {
-        Debug.Log("Player's game over");
         FindObjectOfType<AudioManager>().Play(SoundName.Death);
         gameObject.SetActive(false);
         //world.RemoveObserver(this);

@@ -68,7 +68,7 @@ public class UIManager : MonoBehaviour, IObserver {
     }
 
     private void OnDisable() {
-        //world.RemoveObserver(this);
+        world.RemoveObserver(this);
     }
 
     void Update() {
@@ -199,7 +199,6 @@ public class UIManager : MonoBehaviour, IObserver {
     }
 
     public void OnOpenInventory(bool animated = false) {
-        //Transform parent = inventory.transform.parent;
         if (animated) {
             Vector3 position = inventory.transform.localPosition;
             Vector3 destination = Vector3.Distance(position, inventoryDownPos) < Vector3.Distance(position, Vector3.zero) ? Vector3.zero : inventoryDownPos;
@@ -245,25 +244,6 @@ public class UIManager : MonoBehaviour, IObserver {
             }
         }
     }
-
-    //private void OnChangePlaySet(int id, GameObject frame, GameObject locker) {
-    //    PlaySet set = world.PlaySets[id];
-    //    Debug.Log($"Button-{id} was clicked");
-
-    //    if (set.IsPurchased || set.Price == 0) {
-    //        World.PlayerStats.CurrentPlaySet = set.Name;
-    //        world.SerializeJson();
-    //        OnRestart();
-    //    } else {
-    //        if (World.PlayerStats.Money >= set.Price) {
-    //            frame.GetComponent<Image>().sprite = unlockedFrame;
-    //            set.IsPurchased = true;
-    //            World.PlayerStats.Money -= set.Price;
-    //            world.SerializeJson();
-    //            Destroy(locker);
-    //        }
-    //    }
-    //}
 
     /// <summary>
     /// Smoothly makes the text blinks

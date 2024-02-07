@@ -1868,7 +1868,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -522.5003}
+  m_AnchoredPosition: {x: 0, y: -522.50024}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &617784269
@@ -2547,7 +2547,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: -2000}
   m_SizeDelta: {x: 800, y: 1200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &858648031
@@ -4732,6 +4732,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5a58485c4a25777429a55e263c8c4a60, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  player: {fileID: 307171525}
   leftToCoin: 0
   coinInterval: 3
   baseCoinChance: 40
