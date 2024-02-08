@@ -30,10 +30,6 @@ public class Player : MonoBehaviour, IObserver {
         Instantiate(playerSkin, transform.localPosition, transform.rotation, transform);
     }
 
-    private void OnDisable() {
-        //world.RemoveObserver(this);
-    }
-
     void Update() {
         if (!world.gameOver) {
             InputHandler();

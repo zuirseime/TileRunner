@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class GameCamera : MonoBehaviour, IObserver
@@ -41,7 +39,6 @@ public class GameCamera : MonoBehaviour, IObserver
             transform.position = FollowPlayer();
             transform.LookAt(player);
         }
-        //else ReturnCameraToStart();
     }
 
     private void GameOver() {
