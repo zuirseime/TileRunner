@@ -145,14 +145,14 @@ public class UIManager : MonoBehaviour, IObserver {
             Image buttonImage = button.GetComponent<Image>();
             TextMeshProUGUI buttonText = button.transform.GetComponentInChildren<TextMeshProUGUI>();
 
-            if (playSet.IsPurchased) {
+            if (playSet.IsPurchased || playSet.Price == 0) {
                 Destroy(item.transform.GetChild(0).transform.GetChild(1).gameObject);
             }
 
-            if (playSet.IsPurchased && playSet.Name == World.PlayerStats.CurrentPlaySet) {
+            if ((playSet.IsPurchased || playSet.Price == 0) && playSet.Name == World.PlayerStats.CurrentPlaySet) {
                 buttonImage.color = itemStates[0].Color;
                 buttonText.text = itemStates[0].Text;
-            } else if (playSet.IsPurchased) {
+            } else if (playSet.IsPurchased || playSet.Price == 0) {
                 buttonImage.color = itemStates[1].Color;
                 buttonText.text = itemStates[1].Text;
             } else if (!playSet.IsPurchased && World.PlayerStats.Money >= playSet.Price) {
@@ -163,7 +163,7 @@ public class UIManager : MonoBehaviour, IObserver {
                 buttonText.text = itemStates[3].Text;
             }
 
-            button.AddEventListener(i, button, OnChangePlaySet);
+            button.AddEventListener(i, item, button, OnChangePlaySet);
         }
     }
 
@@ -190,6 +190,8 @@ public class UIManager : MonoBehaviour, IObserver {
     public void OnDoubleCoins() {
         if (coinsWereDoubled || world.localMoney == 0)
             return;
+
+        // TODO: Implement Google Ads or Unity Ads
 
         world.localMoney *= 2;
 
@@ -224,23 +226,25 @@ public class UIManager : MonoBehaviour, IObserver {
         player.enabled = Vector3.Distance(destination, inventoryDownPos) < Vector3.Distance(destination, Vector3.zero);
     }
 
-    private void OnChangePlaySet(int id, Button button) {
+    private void OnChangePlaySet(int id, GameObject item, Button button) {
         PlaySet set = world.PlaySets[id];
-        Debug.Log($"Button-{id} was clicked");
         TextMeshProUGUI buttonText = button.transform.GetComponentInChildren<TextMeshProUGUI>();
+        Image buttonImage = button.GetComponent<Image>();
 
         if ((set.IsPurchased || set.Price == 0) && World.PlayerStats.CurrentPlaySet != set.Name) {
             World.PlayerStats.CurrentPlaySet = set.Name;
-            buttonText.text = ButtonState.Choose.ToString();
             world.SerializeJson();
             OnRestart();
         } else if (set.IsPurchased && World.PlayerStats.CurrentPlaySet == set.Name) {
-            buttonText.text = ButtonState.Chosen.ToString();
         } else {
             if (World.PlayerStats.Money >= set.Price) {
                 set.IsPurchased = true;
                 World.PlayerStats.Money -= set.Price;
                 world.SerializeJson();
+
+                Destroy(item.transform.GetChild(0).transform.GetChild(1).gameObject);
+                buttonImage.color = itemStates[1].Color;
+                buttonText.text = itemStates[1].Text;
             }
         }
     }

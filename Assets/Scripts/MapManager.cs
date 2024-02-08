@@ -10,8 +10,6 @@ public class MapManager : MonoBehaviour, IObserver {
     private World world;
 
     private GameObject currentTile;
-    private GameObject previousTile;
-    private GameObject firstTile;
 
     private Vector3 direction;
     private bool firstMove = true;
@@ -60,28 +58,18 @@ public class MapManager : MonoBehaviour, IObserver {
     }
 
     private Vector3 RandomDirection() {
-        while (true) {
-            List<Vector3> directions = new() {
+        List<Vector3> directions = new() {
             Vector3.forward,
             Vector3.back,
             Vector3.right,
             Vector3.left
         };
 
-            Vector3 direction = directions[Random.Range(0, 4)];
-
-            if (currentTile != null && previousTile != null && currentTile.transform.position + direction == previousTile.transform.position)
-                continue;
-
-            return direction;
-        }
+        return directions[Random.Range(0, 4)];
     }
 
     private void SpawnTile(Vector3 position, bool firstMove = false) {
         GameObject tile;
-
-        //previousTile.GetComponent<Tile>().Hide();
-        //previousTile = currentTile;
 
         if (!map.ContainsKey(position)) {
             tile = Instantiate(tileSkin, position, Quaternion.identity, transform);
@@ -96,7 +84,7 @@ public class MapManager : MonoBehaviour, IObserver {
 
         if (!firstMove) {
             foreach (var pair in map) {
-                if (pair.Value != currentTile) {
+                if (pair.Value != currentTile && pair.Value.activeSelf) {
                     pair.Value.GetComponent<Tile>().Hide();
                 }
             }
