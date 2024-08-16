@@ -3,21 +3,21 @@
   <img src="https://github.com/user-attachments/assets/4d78af09-772c-46cb-b255-566c10c511fb" />
 </p>
 
-The game where you simply move from tile to tile and gain coins to unlock a new skins and surrounding textures.
+Tile Runner is a game where you move from tile to tile, collecting coins to unlock new skins and surrounding textures.
 
 ## Features
 - The game supports the English language only.
 - Android only.
 
 ## In-game controls
-- Swipe in four directions to move a player model.
-- Click the "Inventory" button to change the player skin and the surrounding textures.
+- Swipe in any of the four directions to move the player model.
+- Tap the "Inventory" button to change the player skin and the surrounding textures.
 
 ## Installation
 You can download the latest compiled binary [here](https://github.com/zuirseime/TileRunner/releases/download/v0.1/TileRunner.apk)
 
 ## Development setup
-- Clone the project, including submodules: git clone --depth 1 --recurse-submodules https://github.com/zuirseime/TileRunner.git
+- Clone the project, including submodules: `git clone --depth 1 --recurse-submodules https://github.com/zuirseime/TileRunner.git`
 - Open the downloaded folder in Unity 2022.3.17f1 or newer (File -> Open Project).
 - In Unity project's folders double click SampleScene (Assets -> Scenes -> SampleScene).
 
